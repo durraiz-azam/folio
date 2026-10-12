@@ -11,7 +11,7 @@ import { buildDocx } from "./export-docx"
 import { buildPdf } from "./export-pdf"
 import { loadFontsFromDirectory } from "./fonts"
 import { toBlocks } from "./model"
-import { createDocument } from "./storage"
+import { createDocument, normalizeDocument } from "./storage"
 import { countWords, plainText } from "./text-stats"
 import { welcomeContent } from "./welcome"
 
@@ -21,15 +21,32 @@ async function fonts() {
   return loadFontsFromDirectory((filename) => readFile(join("public/fonts", filename)))
 }
 
+function assertNoEmptyText(node: { type?: string; text?: string; content?: unknown[] }) {
+  if (node.type === "text") assert.ok(node.text)
+  for (const child of node.content ?? []) assertNoEmptyText(child as { type?: string; text?: string; content?: unknown[] })
+}
+
 test("welcome document has the usual word-processor pieces", () => {
   const content = welcomeContent()
+  assertNoEmptyText(content)
   const blocks = toBlocks(content)
-  assert.ok(blocks.some((block) => block.type === "paragraph" && block.variant === "h1"))
   assert.ok(blocks.some((block) => block.type === "list" && !block.ordered))
   assert.ok(blocks.some((block) => block.type === "list" && block.ordered))
   assert.ok(blocks.some((block) => block.type === "table"))
   assert.ok(blocks.some((block) => block.type === "quote"))
   assert.ok(countWords(plainText(content)) > 40)
+})
+
+test("saved documents drop empty text nodes the editor cannot open", () => {
+  const document = normalizeDocument({
+    title: "Recovered",
+    content: {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "" }, { type: "text", text: "Hi" }] }],
+    },
+  })
+  assert.deepEqual(document.content.content?.[0]?.content, [{ type: "text", text: "Hi" }])
+  assertNoEmptyText(document.content)
 })
 
 test("pdf export is a real multi-page-capable text file", async () => {

@@ -27,6 +27,19 @@ export function createDocument(partial: Partial<FolioDocument> = {}): FolioDocum
   })
 }
 
+function sanitizeContent(node: JSONContent): JSONContent {
+  if (!node.content) return node
+  const content = node.content
+    .map(sanitizeContent)
+    .filter((child) => child.type !== "text" || Boolean(child.text))
+  if (!content.length) {
+    const rest = { ...node }
+    delete rest.content
+    return rest
+  }
+  return { ...node, content }
+}
+
 export function normalizeDocument(raw: Partial<FolioDocument>): FolioDocument {
   const pageSize: PageSize = raw.pageSize === "a4" ? "a4" : "letter"
   const margin: MarginPreset = raw.margin === "narrow" || raw.margin === "wide" ? raw.margin : "normal"
@@ -34,7 +47,7 @@ export function normalizeDocument(raw: Partial<FolioDocument>): FolioDocument {
   return {
     id: raw.id || crypto.randomUUID(),
     title: (raw.title || "Untitled document").slice(0, 120),
-    content: raw.content?.type ? raw.content : emptyContent(),
+    content: raw.content?.type ? sanitizeContent(raw.content) : emptyContent(),
     pageSize,
     margin,
     lineSpacing: nearestLineSpacing(Number(raw.lineSpacing) || 1.15),

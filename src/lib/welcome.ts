@@ -19,7 +19,7 @@ function item(value: string, kind = "listItem"): JSONContent {
 function cell(value: string, header = false): JSONContent {
   return {
     type: header ? "tableHeader" : "tableCell",
-    content: [paragraph(text(value))],
+    content: [value ? paragraph(text(value)) : { type: "paragraph" }],
   }
 }
 
