@@ -11,8 +11,10 @@ export type FontFiles = Record<"serif" | "sans" | "mono", FontFaceFiles>
 
 let cached: Promise<FontFiles> | null = null
 
+const assetBase = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+
 async function readFont(path: string) {
-  const response = await fetch(path)
+  const response = await fetch(`${assetBase}${path}`)
   if (!response.ok) throw new Error(`Could not load ${path}`)
   return new Uint8Array(await response.arrayBuffer())
 }

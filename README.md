@@ -2,6 +2,8 @@
 
 Folio is a word processor for the ordinary work of writing: letters, notes, briefs, and handouts. You format on a page, and you can take the file with you as a PDF or a Word document.
 
+The public site is [https://durraiz-azam.github.io/folio/](https://durraiz-azam.github.io/folio/).
+
 Documents stay in this browser. Nothing is uploaded.
 
 ## Run it
